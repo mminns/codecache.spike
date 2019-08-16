@@ -1,6 +1,6 @@
 # JMX
 
-# Experiment 1
+## Experiment 1
 
 Running Bitbucket using 
 
@@ -17,7 +17,7 @@ gave the following from http://localhost:7990/bitbucket/plugins/servlet/codecach
         Committed: 81MB (83427328)
 
 
-# Experiment 2
+## Experiment 2
 
 Setting the code cache to arbitrarily very small
 
@@ -29,7 +29,7 @@ Fails to start
     [INFO] Error: Could not create the Java Virtual Machine.
     [INFO] Error: A fatal exception has occurred. Program will exit.
 
-# Experiment 3
+## Experiment 3
 
 Setting the code cache to arbitrarily very small and attempt to align it with _InitialCodeCacheSize_
 
@@ -41,7 +41,7 @@ Fails to start
     [INFO] Error: Could not create the Java Virtual Machine.
     [INFO] Error: A fatal exception has occurred. Program will exit.
 
-# Experiment 4
+## Experiment 4
 
 Setting 
 
@@ -65,7 +65,7 @@ but then slowly continues but eventuall fails
     [INFO] ------------------------------------------------------------------------
     [ERROR] Failed to execute goal com.atlassian.maven.plugins:amps-dispatcher-maven-plugin:8.0.2:run (default-cli) on project codecache.spike: Timed out waiting for Bitbucket Server to start -> [Help 1]
 
-# Experiment 5
+## Experiment 5
 
 Setting 
 
@@ -91,7 +91,7 @@ gave the following from http://localhost:7990/bitbucket/plugins/servlet/codecach
         Max : 2MB (2555904)
         Committed: 2MB (2555904)
 
-## Notes
+### Notes
 
 Interestingly
 * _Used_ < _Max_ 
@@ -102,7 +102,7 @@ whereas
 
 Also the JVM is currently logging to stdout/stderr so how would we read/check the logs for the compiler error messages ?
 
-# Experiment 6
+## Experiment 6
 
 > atlas-run --jvmargs "-XX:ReservedCodeCacheSize=2496k -XX:InitialCodeCacheSize=2496K -XX:+PrintCodeCacheOnCompilation"
 
@@ -607,7 +607,7 @@ gave the following output
     [INFO] CodeCache: size=2496Kb used=1810Kb max_used=1972Kb free=685Kb
     [INFO] CodeCache: size=2496Kb used=1813Kb max_used=1972Kb free=682Kb
 
-# Experiment 7
+## Experiment 7
 
 Setting 
 
@@ -639,7 +639,7 @@ giving
         Committed: 10MB (10240000)
 
 
-## Notes
+### Notes
 
 At higher values e.g. 
 
@@ -650,3 +650,29 @@ The compiler never fails.
 Only seemed to fail when free < 2000kb and/or < 20% of max
 
 No obvious indication of when compiler failure happened from the JMX info.
+
+# Logging
+
+http://localhost:7990/bitbucket/plugins/servlet/codecachelog
+
+## Experiment 1
+
+Setting to cause coe cache/compilation failures
+
+>atlas-debug --jvmargs "-XX:ReservedCodeCacheSize=2496k -XX:InitialCodeCacheSize=2496K -XX:+UnlockDiagnosticVMOptions -XX:+LogCompilation"
+
+Runs and gives the output from http://localhost:7990/bitbucket/plugins/servlet/codecachelog as follows, indicating the error was found.
+
+    Fri Aug 16 17:06:42 BST 2019
+    -XX:ReservedCodeCacheSize=2496k, -XX:InitialCodeCacheSize=2496K, -XX:+UnlockDiagnosticVMOptions, -XX:+LogCompilation, -Xmx1g, -Xdebug, -Xrunjdwp:transport=dt_socket,address=5005,suspend=n,server=y, -Dbitbucket.home=/Volumes/PROJECTS/projects/github.com/mminns/codecache-spike/codecache.bitbucket/target/bitbucket/home, -Djvmargs=-XX:ReservedCodeCacheSize=2496k -XX:InitialCodeCacheSize=2496K -XX:+UnlockDiagnosticVMOptions -XX:+LogCompilation, -Dcom.sun.management.jmxremote.ssl=false, -Dplugin.root.directories=/Volumes/PROJECTS/projects/github.com/mminns/codecache-spike/codecache.bitbucket, -Dcom.sun.management.jmxremote.port=7995, -Djohnson.spring.lifecycle.synchronousStartup=true, -Dcom.sun.management.jmxremote.host=127.0.0.1, -Dcom.sun.management.jmxremote.authenticate=false, -Dbaseurl=http://Michaels-MacBook-Pro.local:7990/bitbucket, -Dplugin.resource.directories=/Volumes/PROJECTS/projects/github.com/mminns/codecache-spike/codecache.bitbucket/src/main/resources,/Volumes/PROJECTS/projects/github.com/mminns/codecache-spike/codecache.bitbucket/src/test/resources, -DjarsToSkip=${tomcat.util.scan.StandardJarScanFilter.jarsToSkip}, -Datlassian.dev.mode=true, -Djava.rmi.server.hostname=127.0.0.1, -Djava.awt.headless=true, -Dbaseurl.display=http://Michaels-MacBook-Pro.local:7990/bitbucket, -Datlassian.sdk.version=8.0.2
+    /Volumes/PROJECTS/projects/github.com/mminns/codecache-spike/codecache.bitbucket/hotspot_pid48116.log
+    no failure reason='CodeCache is full'
+    no failure reason='compilation is disabled'
+    <code_cache_full total_blobs='767' nmethods='432' adapters='253' free_code_cache='574720' stamp='2.362'/>
+    compilation: disabled (not enough contiguous free space left)
+
+
+### Notes
+
+* The logs potentially get very large?
+* Do the logs rollover etc?
